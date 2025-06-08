@@ -5,32 +5,37 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(bodyParser.json());
 
-// Webhook verification (GET)
+// Webhook verification
 app.get('/webhook', (req, res) => {
-  const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'stachbot-verify';
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
 
-  if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('Webhook verified');
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
-  }
+    if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
+        console.log('WEBHOOK_VERIFIED');
+        res.status(200).send(challenge);
+    } else {
+        res.sendStatus(403);
+    }
 });
 
-// Webhook events (POST)
+// Webhook event handler
 app.post('/webhook', (req, res) => {
-  console.log('Webhook event received:', JSON.stringify(req.body, null, 2));
-  res.sendStatus(200);
+    const body = req.body;
+    console.log('📬 Received webhook:');
+    console.dir(body, { depth: null });
+
+    if (body.object === 'page') {
+        res.status(200).send('EVENT_RECEIVED');
+    } else {
+        res.sendStatus(404);
+    }
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`✅ Server is running on port ${PORT}`);
 });
